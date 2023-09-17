@@ -1,3 +1,4 @@
+#from pickle import dump, load
 from json import dump, load
 from requests import get    
 from bs4 import BeautifulSoup
@@ -29,31 +30,32 @@ def scan(url, parent):
         page = get(url)
         soup = BeautifulSoup(page.text, 'html.parser')
         for link in soup.findAll('a'):
-            sleep(.5)
             new_url = link.attrs.get('href')
             if new_url != None:
                 if new_url.startswith('http'):
                     domain = get_domain(new_url)
                     if  domain not in domains:
-                        t(target=lambda: domains_db.save(domain, True)).start()
+                        t(target=lambda: domains_db.save(domain, parent)).start()
                         domains.append(domain)
                         Thread(target=scan, args=(new_url, url)).start()
                 else:
                     url_ = f"{url}{new_url}"
-                    if pages.check_in(url_) == False:
+                    if url_ not in pages == False:
                         pages.append(url_)
-                        t(target=lambda: pages_db.save(url_, True)).start()
+                        t(target=lambda: pages_db.save(url_, parent)).start()
                         Thread(target=scan, args=(url_, url)).start()
             #print(link.attrs.get('href'))
     except Exception as e:
+        print(e)
         fails.append((url, str(e)))
 def thread_handler():
     global thread_que
     while True:
         if activeCount() <= 10:
             if thread_que.__len__() > 0:
+                print(1)
                 t(target=thread_que.pop(0)).start()
-t(target=lambda:scan(start_url, start_url)).start()
+t(target=lambda:scan(start_url, start_url), name='scanner').start()
 t(target=thread_handler).start()
 while True:
     sleep(1)
