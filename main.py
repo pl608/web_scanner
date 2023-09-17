@@ -1,4 +1,3 @@
-#from pickle import dump, load
 from json import dump, load
 from requests import get    
 from bs4 import BeautifulSoup
@@ -16,13 +15,16 @@ class Thread():
         thread_que.append(lambda: self.target(*self.args))
 
 start_url = "https://www.wikipedia.org/"
-domains = Database()
+domains_db = Database()
+pages_db = Database()
+domains = []
+pages = []
 fails = []
 def get_domain(url):
     #print(url)
     return url.split('/')[2]
 def scan(url, parent):
-    global domains
+    global domains, pages, domains_db, pages_db
     try:
         page = get(url)
         soup = BeautifulSoup(page.text, 'html.parser')
@@ -31,13 +33,17 @@ def scan(url, parent):
             new_url = link.attrs.get('href')
             if new_url != None:
                 if new_url.startswith('http'):
-                    if  domains.check_in(get_domain(new_url)) == False:
-                        domains.save(get_domain(new_url), True)
-                        #print(get_domain(new_url))
+                    domain = get_domain(new_url)
+                    if  domain not in domains:
+                        t(target=lambda: domains_db.save(domain, True)).start()
+                        domains.append(domain)
                         Thread(target=scan, args=(new_url, url)).start()
                 else:
                     url_ = f"{url}{new_url}"
-                    Thread(target=scan, args=(url_, url)).start()
+                    if pages.check_in(url_) == False:
+                        pages.append(url_)
+                        t(target=lambda: pages_db.save(url_, True)).start()
+                        Thread(target=scan, args=(url_, url)).start()
             #print(link.attrs.get('href'))
     except Exception as e:
         fails.append((url, str(e)))
@@ -51,7 +57,3 @@ t(target=lambda:scan(start_url, start_url)).start()
 t(target=thread_handler).start()
 while True:
     sleep(1)
-    #print((activeCount()))
-    #t(target=lambda: dump(domains, open('domains.json', 'w'), indent=1)).start()
-    #t(target=lambda: dump(domains, open('fails.json', 'w'), indent=1)).start()
-    #exit()
