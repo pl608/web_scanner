@@ -1,18 +1,22 @@
+#from pickle import dump, load
 from json import dump, load
 from requests import get    
 from bs4 import BeautifulSoup
 from time import sleep
 from threading import active_count as activeCount
 from threading import Thread as t
+from database_module import Database
 import _thread
+thread_que = []
 class Thread():
-    def __init__(self, target=None, args=None):
+    def __init__(self, target=None, args=()):
         self.target = target
         self.args = args
     def start(self):
-        _thread.start_new_thread(target=self.target, args=self.args)
+        thread_que.append(lambda: self.target(*self.args))
+
 start_url = "https://www.wikipedia.org/"
-domains = []
+domains = Database()
 fails = []
 def get_domain(url):
     #print(url)
@@ -28,8 +32,8 @@ def scan(url, parent):
             if new_url != None:
 
                 if new_url.startswith('http'):
-                    if new_url not in domains:
-                        domains.append(new_url)
+                    if  domains.check_in(get_domain(new_url)) == False:
+                        domains.append(get_domain(new_url))
                         Thread(target=scan, args=(new_url, url)).start()
                 else:
                     url_ = f"{url}{new_url}"
@@ -37,7 +41,14 @@ def scan(url, parent):
             #print(link.attrs.get('href'))
     except Exception as e:
         fails.append((url, str(e)))
+def thread_handler():
+    global thread_que
+    while True:
+        if activeCount() <= 10:
+            if thread_que.__len__() > 0:
+                t(target=thread_que.pop(0)).start()
 t(target=lambda:scan(start_url, start_url)).start()
+t(target=thread_handler).start()
 while True:
     sleep(1)
     #print((activeCount()))
