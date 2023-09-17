@@ -6,11 +6,12 @@ class Database():
     def __init__(self):
         self.sid = loads(get(f'{self.db_url}').text).get('sid')
     def save(self, key:str, value:str):
-        resp = loads(get(f'{self.db_url}/?key={key}&val={value}').text)
+        #print(f'Callin {key}')
+        resp = loads(get(f'{self.db_url}/?sid={self.sid}&key={str(key)}&val={value}').text)
         if resp.get('saved',False)==False:
             raise KeyError(resp.get('error', 'No Error Returned'))
     def get(self, key):
-        resp = loads(get(f'{self.db_url}/?key={key}'))
+        resp = loads(get(f'{self.db_url}/?sid={self.sid}&key={key}'))
         if 'error' in resp:
             if key != 'error':
                 raise KeyError(resp.get('error', 'No Error Returned'))
@@ -20,6 +21,7 @@ class Database():
     def append(self, key):
         self.save(key, None)
     def check_in(self, key):
+        #print(key)
         resp = loads(get(f'{self.db_url}/?sid={self.sid}&key={key}&cmd=in').text)
         if type(resp)==bool:
             return resp
