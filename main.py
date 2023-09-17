@@ -29,6 +29,7 @@ def scan(url, parent):
         page = get(url)
         soup = BeautifulSoup(page.text, 'html.parser')
         for link in soup.findAll('a'):
+            sleep(.05)
             new_url = link.attrs.get('href')
             if new_url != None:
                 if new_url.startswith('http'):
@@ -41,7 +42,7 @@ def scan(url, parent):
                     url_ = f"{url}{new_url}"
                     if url_ not in pages == False:
                         pages.append(url_)
-                        pages_db.save(url_, parent)
+                        #pages_db.save(url_, parent)
                         Thread(target=scan, args=(url_, url)).start()
             #print(link.attrs.get('href'))
     except Exception as e:
