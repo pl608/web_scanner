@@ -1,4 +1,3 @@
-#from pickle import dump, load
 from json import dump, load
 from requests import get    
 from bs4 import BeautifulSoup
@@ -35,14 +34,14 @@ def scan(url, parent):
                 if new_url.startswith('http'):
                     domain = get_domain(new_url)
                     if  domain not in domains:
-                        t(target=lambda: domains_db.save(domain, parent)).start()
+                        domains_db.save(domain, parent)
                         domains.append(domain)
                         Thread(target=scan, args=(new_url, url)).start()
                 else:
                     url_ = f"{url}{new_url}"
                     if url_ not in pages == False:
                         pages.append(url_)
-                        t(target=lambda: pages_db.save(url_, parent)).start()
+                        pages_db.save(url_, parent)
                         Thread(target=scan, args=(url_, url)).start()
             #print(link.attrs.get('href'))
     except Exception as e:
