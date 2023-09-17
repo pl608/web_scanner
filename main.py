@@ -40,7 +40,8 @@ def scan(url, parent):
                     Thread(target=scan, args=(url_, url)).start()
             #print(link.attrs.get('href'))
     except Exception as e:
-        fails.append((url, str(e)))
+        #fails.append((url, str(e)))
+        pass
 def thread_handler():
     global thread_que
     while True:
@@ -52,6 +53,6 @@ t(target=thread_handler).start()
 while True:
     sleep(1)
     #print((activeCount()))
-    t(target=lambda: dump(domains, open('domains.json', 'w'), indent=1)).start()
-    t(target=lambda: dump(domains, open('fails.json', 'w'), indent=1)).start()
+    #t(target=lambda: dump(domains, open('domains.json', 'w'), indent=1)).start()
+    #t(target=lambda: dump(domains, open('fails.json', 'w'), indent=1)).start()
     #exit()
